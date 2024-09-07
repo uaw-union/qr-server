@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "ocr-server"
+name = "qr-server"
 version = "0.1.0"
 description = ""
 authors = ["Ben Packer <ben.paul.ryan.packer@gmail.com>"]
