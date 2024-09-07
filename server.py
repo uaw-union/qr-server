@@ -35,13 +35,21 @@ async def get_logo():
 @app.get("/{url:path}.png")
 async def generate_qr(url: str, request: Request):
     text = request.query_params.get("text", "")
-    print(f"Generating QR code for {url} with label: {text}")
+    hide_logo = request.query_params.get("hide_logo", "").lower() in [
+        "true",
+        "1",
+        "yes",
+        "on",
+    ]
+    print(
+        f"Generating QR code for {url} with label: {text}, hide_logo: {hide_logo}"
+    )
     # Ensure the URL is reasonable to avoid malicious content generation
     if len(url) > 2048:
         raise HTTPException(status_code=400, detail="URL is too long")
 
     _logo = await get_logo()
-    if _logo is None:
+    if _logo is None and not hide_logo:
         raise HTTPException(status_code=500, detail="Logo image not available")
 
     # Resize logo
@@ -81,12 +89,13 @@ async def generate_qr(url: str, request: Request):
     # Use new_img instead of img_qr for the rest of the processing
     img_qr = new_img
 
-    # Place logo in the middle
-    pos = (
-        (img_qr.size[0] - _logo.size[0]) // 2,
-        (img_qr.size[1] - _logo.size[1]) // 2,
-    )
-    img_qr.paste(_logo, pos, _logo)
+    # Place logo in the middle if not hidden
+    if not hide_logo:
+        pos = (
+            (img_qr.size[0] - _logo.size[0]) // 2,
+            (img_qr.size[1] - _logo.size[1]) // 2,
+        )
+        img_qr.paste(_logo, pos, _logo)
 
     # Add text at the bottom if present
     if text:
